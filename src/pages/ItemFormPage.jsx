@@ -31,6 +31,7 @@ export default function ItemFormPage() {
   const { profile, registerNickname } = useProfile()
 
   const [form, setForm] = useState({
+    postType: 'lend',
     title: '',
     description: '',
     categoryId: '',
@@ -65,6 +66,7 @@ export default function ItemFormPage() {
         campus_id: campus.id,
         building_id: form.buildingId || null,
         category_id: form.categoryId || null,
+        post_type: form.postType,
         title: form.title,
         description: form.description || null,
         photo_url: photoUrl,
@@ -89,17 +91,47 @@ export default function ItemFormPage() {
     )
   }
 
+  const isBorrow = form.postType === 'borrow'
+
   return (
     <Layout>
-      <h1 className="text-xl font-bold mb-4">물품 등록</h1>
+      <h1 className="text-xl font-bold mb-4">{isBorrow ? '구하는 글 등록' : '물품 등록'}</h1>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white border rounded-xl p-4">
+        <div>
+          <label className="text-sm font-medium">글 종류</label>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => update('postType', 'lend')}
+              className={`py-2.5 rounded-md text-sm font-medium border ${
+                !isBorrow
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              빌려줄게요
+            </button>
+            <button
+              type="button"
+              onClick={() => update('postType', 'borrow')}
+              className={`py-2.5 rounded-md text-sm font-medium border ${
+                isBorrow
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              빌려주세요 (구해요)
+            </button>
+          </div>
+        </div>
+
         <div>
           <label className="text-sm font-medium">물건 이름</label>
           <input
             required
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
-            placeholder="예: 보조배터리 (C타입)"
+            placeholder={isBorrow ? '예: 우산 급구합니다' : '예: 보조배터리 (C타입)'}
             className="mt-1 w-full border rounded-md px-3 py-2 text-sm"
           />
         </div>
@@ -150,11 +182,11 @@ export default function ItemFormPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">대여 가능 시간</label>
+          <label className="text-sm font-medium">{isBorrow ? '필요한 시간대' : '대여 가능 시간'}</label>
           <input
             value={form.availableTime}
             onChange={(e) => update('availableTime', e.target.value)}
-            placeholder="예: 평일 저녁 6시~10시"
+            placeholder={isBorrow ? '예: 오늘 저녁까지 급해요' : '예: 평일 저녁 6시~10시'}
             className="mt-1 w-full border rounded-md px-3 py-2 text-sm"
           />
         </div>
@@ -185,7 +217,7 @@ export default function ItemFormPage() {
           disabled={submitting}
           className="w-full py-2.5 rounded-md bg-brand-600 text-white font-medium disabled:opacity-50"
         >
-          등록하기
+          {isBorrow ? '구하는 글 등록하기' : '등록하기'}
         </button>
       </form>
 

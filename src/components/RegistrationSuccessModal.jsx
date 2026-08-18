@@ -1,4 +1,5 @@
 import StatusBadge from './StatusBadge'
+import PostTypeBadge from './PostTypeBadge'
 
 export default function RegistrationSuccessModal({
   item,
@@ -16,7 +17,9 @@ export default function RegistrationSuccessModal({
           <p className="text-2xl">✅</p>
           <h2 className="text-lg font-bold mt-1">등록완료!</h2>
           <p className="text-sm text-slate-500 mt-1">
-            "{item.title}"을(를) {item.building?.name ?? '캠퍼스'}에 등록했어요.
+            {item.post_type === 'borrow'
+              ? `"${item.title}" 구하는 글을 ${item.building?.name ?? '캠퍼스'}에 등록했어요.`
+              : `"${item.title}"을(를) ${item.building?.name ?? '캠퍼스'}에 등록했어요.`}
           </p>
         </div>
 
@@ -40,7 +43,10 @@ export default function RegistrationSuccessModal({
                       <p className="text-sm truncate">{i.title}</p>
                       <p className="text-xs text-slate-400">{i.category?.name}</p>
                     </div>
-                    <StatusBadge status={i.status} />
+                    <div className="flex gap-1 shrink-0">
+                      <PostTypeBadge postType={i.post_type} />
+                      <StatusBadge status={i.status} postType={i.post_type} />
+                    </div>
                   </div>
                 ))}
               </div>

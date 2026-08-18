@@ -7,10 +7,17 @@ import { useCampus } from '../hooks/useCampuses'
 import { useCategories } from '../hooks/useCategories'
 import { useItems } from '../hooks/useItems'
 
+const POST_TYPE_TABS = [
+  { value: null, label: '전체' },
+  { value: 'lend', label: '빌려줘요' },
+  { value: 'borrow', label: '구해요' },
+]
+
 export default function ItemListPage() {
   const { campusSlug } = useParams()
   const { campus } = useCampus(campusSlug)
   const { categories } = useCategories()
+  const [postType, setPostType] = useState(null)
   const [categoryId, setCategoryId] = useState(null)
   const [sort, setSort] = useState('newest')
   const [availableOnly, setAvailableOnly] = useState(false)
@@ -26,6 +33,7 @@ export default function ItemListPage() {
   const { items, loading } = useItems({
     campusId: campus?.id,
     categoryId,
+    postType,
     status: availableOnly ? 'available' : undefined,
     search,
     sort,
@@ -34,6 +42,22 @@ export default function ItemListPage() {
   return (
     <Layout>
       <h1 className="text-xl font-bold mb-4">{campus?.name ?? '물품 목록'}</h1>
+
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {POST_TYPE_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setPostType(tab.value)}
+            className={`py-2 rounded-md text-sm font-medium border ${
+              postType === tab.value
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-white text-slate-600 border-slate-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       <input
         value={searchInput}
@@ -51,7 +75,7 @@ export default function ItemListPage() {
             checked={availableOnly}
             onChange={(e) => setAvailableOnly(e.target.checked)}
           />
-          대여 가능만 보기
+          가능한 것만 보기
         </label>
         <select
           value={sort}

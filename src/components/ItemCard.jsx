@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import StatusBadge from './StatusBadge'
+import PostTypeBadge from './PostTypeBadge'
 
 export default function ItemCard({ item, campusSlug }) {
   return (
@@ -17,7 +18,10 @@ export default function ItemCard({ item, campusSlug }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold truncate">{item.title}</h3>
-          <StatusBadge status={item.status} />
+          <div className="flex gap-1 shrink-0">
+            <PostTypeBadge postType={item.post_type} />
+            <StatusBadge status={item.status} postType={item.post_type} />
+          </div>
         </div>
         <p className="text-xs text-slate-500 mt-1">
           {item.category?.name} · {item.building?.name ?? '위치 미지정'}

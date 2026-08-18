@@ -39,12 +39,17 @@ create table profiles (
 );
 
 -- 5. 물품
+-- post_type: 'lend' = 내가 가진 물건을 빌려줌 (중고장터 "팝니다"格), 'borrow' = 물건을 구함 ("삽니다"格)
+-- 두 경우 모두 owner_id는 글쓴이, rental_requests.requester_id는 그 글에 반응한 상대방을 의미한다
+-- (lend는 "빌려줄게요" 글에 빌리겠다는 사람이 요청하는 것, borrow는 "구해요" 글에 빌려주겠다는 사람이 제안하는 것)
 create table items (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references profiles(id) on delete cascade,
   campus_id uuid not null references campuses(id),
   building_id uuid references buildings(id),
   category_id uuid not null references categories(id),
+  post_type text not null default 'lend'
+    check (post_type in ('lend', 'borrow')),
   title text not null,
   description text,
   photo_url text,

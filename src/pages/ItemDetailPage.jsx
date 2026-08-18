@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import StatusBadge from '../components/StatusBadge'
+import PostTypeBadge from '../components/PostTypeBadge'
 import NicknameGate from '../components/NicknameGate'
 import RentalRequestModal from '../components/RentalRequestModal'
 import { useItem } from '../hooks/useItems'
@@ -13,6 +14,25 @@ import {
   rejectRequest,
   useRequestsForItem,
 } from '../hooks/useRentalRequests'
+
+const COPY = {
+  lend: {
+    requestButton: '대여 요청 보내기',
+    unavailableRented: '지금은 다른 사람이 대여 중이에요.',
+    unavailableReturned: '반납 완료되어 더 이상 대여할 수 없어요.',
+    pendingWait: '요청을 보냈어요. 상대방의 수락을 기다리는 중...',
+    pendingListTitle: '대여 요청',
+    completeButton: '반납 완료 처리',
+  },
+  borrow: {
+    requestButton: '제가 빌려드릴게요',
+    unavailableRented: '이미 다른 분이 빌려주기로 했어요.',
+    unavailableReturned: '요청이 마감됐어요.',
+    pendingWait: '빌려드리겠다고 알렸어요. 상대방의 확인을 기다리는 중...',
+    pendingListTitle: '빌려주겠다는 사람',
+    completeButton: '완료 처리',
+  },
+}
 
 export default function ItemDetailPage() {
   const { campusSlug, itemId } = useParams()
@@ -40,6 +60,7 @@ export default function ItemDetailPage() {
     )
   }
 
+  const copy = COPY[item.post_type] ?? COPY.lend
   const isOwner = profile?.id === item.owner_id
   const myRequest = requests.find((r) => r.requester_id === profile?.id)
   const pendingRequests = requests.filter((r) => r.status === 'pending')
@@ -95,7 +116,10 @@ export default function ItemDetailPage() {
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">{item.title}</h1>
-            <StatusBadge status={item.status} />
+            <div className="flex gap-1 shrink-0">
+              <PostTypeBadge postType={item.post_type} />
+              <StatusBadge status={item.status} postType={item.post_type} />
+            </div>
           </div>
           <p className="text-sm text-slate-500">
             {item.category?.name} · {item.building?.name ?? '위치 미지정'}
@@ -103,7 +127,10 @@ export default function ItemDetailPage() {
           </p>
           {item.available_time && (
             <p className="text-sm">
-              <span className="text-slate-400">대여 가능 시간</span> {item.available_time}
+              <span className="text-slate-400">
+                {item.post_type === 'borrow' ? '필요한 시간대' : '대여 가능 시간'}
+              </span>{' '}
+              {item.available_time}
             </p>
           )}
           {item.description && <p className="text-sm text-slate-700">{item.description}</p>}
@@ -124,18 +151,18 @@ export default function ItemDetailPage() {
             onClick={() => setShowRequestModal(true)}
             className="w-full py-2.5 rounded-md bg-brand-600 text-white font-medium"
           >
-            대여 요청 보내기
+            {copy.requestButton}
           </button>
         )}
 
         {profile && !isOwner && item.status !== 'available' && !myRequest && (
           <p className="text-sm text-slate-500 text-center">
-            {item.status === 'rented' ? '지금은 다른 사람이 대여 중이에요.' : '반납 완료되어 더 이상 대여할 수 없어요.'}
+            {item.status === 'rented' ? copy.unavailableRented : copy.unavailableReturned}
           </p>
         )}
 
         {myRequest && myRequest.status === 'pending' && (
-          <p className="text-sm text-slate-500 text-center">요청을 보냈어요. 상대방의 수락을 기다리는 중...</p>
+          <p className="text-sm text-slate-500 text-center">{copy.pendingWait}</p>
         )}
 
         {myRequest && myRequest.status === 'accepted' && (
@@ -149,7 +176,9 @@ export default function ItemDetailPage() {
 
         {isOwner && pendingRequests.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold">대여 요청 ({pendingRequests.length})</h2>
+            <h2 className="text-sm font-semibold">
+              {copy.pendingListTitle} ({pendingRequests.length})
+            </h2>
             {pendingRequests.map((r) => (
               <div key={r.id} className="border rounded-lg p-3 flex items-center justify-between">
                 <div>
@@ -182,7 +211,7 @@ export default function ItemDetailPage() {
             onClick={handleComplete}
             className="w-full py-2.5 rounded-md bg-emerald-600 text-white font-medium"
           >
-            반납 완료 처리
+            {copy.completeButton}
           </button>
         )}
       </div>

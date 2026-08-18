@@ -12,6 +12,7 @@ export function useItems({
   campusId,
   buildingId,
   categoryId,
+  postType,
   status,
   search,
   sort = 'newest',
@@ -34,6 +35,7 @@ export function useItems({
     let query = supabase.from('items').select(ITEM_SELECT).eq('campus_id', campusId)
     if (buildingId) query = query.eq('building_id', buildingId)
     if (categoryId) query = query.eq('category_id', categoryId)
+    if (postType) query = query.eq('post_type', postType)
     if (status) query = query.eq('status', status)
     if (search?.trim()) query = query.ilike('title', `%${search.trim()}%`)
     query = query.order('created_at', { ascending: sort === 'oldest' })
@@ -48,7 +50,7 @@ export function useItems({
     return () => {
       cancelled = true
     }
-  }, [campusId, buildingId, categoryId, status, search, sort, reloadToken])
+  }, [campusId, buildingId, categoryId, postType, status, search, sort, reloadToken])
 
   return { items, loading, error, reload }
 }
