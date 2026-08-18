@@ -1,0 +1,68 @@
+# 캠퍼스 물품 대여 서비스 (성균관대 MVP)
+
+시험 기간에 보조배터리/충전기/우산/계산기 같은 물건을 캠퍼스 내에서 짧게 빌려주고 빌리는 웹앱.
+로그인 없이 닉네임만으로 바로 사용할 수 있는 MVP 버전입니다.
+
+## 1. 준비물
+
+- Node.js 18 이상
+- Supabase 프로젝트 (무료 플랜으로 충분)
+
+## 2. Supabase 설정
+
+1. [supabase.com](https://supabase.com)에서 새 프로젝트 생성
+2. 왼쪽 메뉴 SQL Editor에서 `supabase/schema.sql` 내용을 실행
+   - 테이블(campuses, buildings, categories, profiles, items, rental_requests, chat_rooms, chat_messages, reviews) 생성
+   - RLS 정책 생성 (MVP 단계라 anon 키에 전체 허용, 운영 전환 시 조여야 함)
+   - 성균관대 자연과학캠퍼스/인문사회과학캠퍼스 + 건물 시드 데이터 삽입
+3. Storage 메뉴에서 `item-photos` 버킷을 **public**으로 생성 (물품 사진 업로드용)
+4. Project Settings → API에서 `Project URL`, `anon public key` 복사
+
+## 3. 캠퍼스 지도 이미지
+
+지도는 성균관대 공식 캠퍼스 조감도 이미지를 배경으로 깔고, 그 위에 건물 위치를 %좌표로 겹쳐서
+클릭 가능한 마커를 표시하는 방식입니다. 이미지는 이미 아래 경로에 저장돼 있고, `schema.sql`의
+`campuses.map_image_url`도 이 경로를 가리키도록 맞춰뒀습니다.
+
+- `기말mvp/public/maps/natural-campus.jpg` — 자연과학캠퍼스
+- `기말mvp/public/maps/insa-campus.jpg` — 인문사회과학캠퍼스
+
+건물 마커 위치(`buildings.pos_x`, `pos_y`, 이미지 기준 % 좌표)는 이미지를 보고 눈대중으로 추정한
+값이라 실제 라벨 위치와 다소 어긋날 수 있습니다. 화면에서 지도를 띄워보고 Supabase 대시보드에서
+`buildings` 테이블 값을 조금씩 조정해주세요.
+
+## 4. 환경변수
+
+```bash
+cp .env.local.example .env.local
+```
+
+`.env.local`을 열어 Supabase 값으로 채워주세요.
+
+## 5. 실행
+
+```bash
+npm install
+npm run dev
+```
+
+`.env.local`을 설정하지 않아도 화면은 뜨지만, 상단에 안내 배너가 뜨고 데이터는 비어있는 상태로 보입니다.
+지도 이미지를 넣지 않은 캠퍼스는 자리표시자(회색 그리드) 위에 마커만 표시됩니다.
+
+## 6. 구현된 기능
+
+- [x] 캠퍼스 선택 (자연과학캠퍼스 / 인문사회과학캠퍼스)
+- [x] 캠퍼스 지도 이미지 + 건물 마커 클릭 → 해당 건물 물품 보기 / 새 물품 등록
+- [x] 물품 등록 (물건명, 카테고리, 건물, 세부 위치, 대여가능시간, 사진 선택)
+- [x] 물품 목록: 카테고리 필터 + 최신순/오래된순 정렬
+- [x] 대여 요청 → 요청 수락 시 1:1 채팅방 자동 생성 (Supabase Realtime)
+- [x] 물품 상태 관리: 대여가능 → 대여중 → 반납완료
+- [ ] 학교 이메일 회원가입/로그인 (요청에 따라 이번 단계에서는 제외, 닉네임 기반 임시 프로필로 대체)
+- [ ] 반납 후 별점 후기 (스키마에 `reviews` 테이블만 준비됨, UI 미구현)
+
+## 7. 다음 단계 제안
+
+- Supabase Auth(학교 이메일 인증)를 붙이면서 `profiles.id`를 `auth.users.id`로 전환하고 RLS를 `auth.uid()` 기준으로 강화
+- 반납 후 별점 후기 UI 추가
+- 두 캠퍼스 모두 건물 좌표(`pos_x`/`pos_y`) 정밀 보정
+- Vercel 배포 (환경변수 등록 후 `vercel deploy`)
