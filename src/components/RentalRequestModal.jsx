@@ -14,8 +14,27 @@ const COPY = {
   },
 }
 
+// 아이템에 이미 적혀 있는 시간/장소 정보로 기본 메시지를 만들어준다.
+// 요청자가 같은 내용을 처음부터 다시 타이핑하지 않아도 되게 하기 위함.
+function buildDefaultMessage(item) {
+  const place = item.location_text || item.building?.name
+  const time = item.available_time
+  const isBorrow = item.post_type === 'borrow'
+
+  if (time && place) {
+    return isBorrow ? `${time}에 ${place}에서 전달해드릴게요.` : `${time}에 ${place}로 받으러 갈게요.`
+  }
+  if (time) {
+    return isBorrow ? `${time}에 전달해드릴게요.` : `${time}에 받으러 갈게요.`
+  }
+  if (place) {
+    return isBorrow ? `${place}에서 전달해드릴게요.` : `${place}로 받으러 갈게요.`
+  }
+  return ''
+}
+
 export default function RentalRequestModal({ item, requesterId, onClose, onSent }) {
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(() => buildDefaultMessage(item))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const copy = COPY[item.post_type] ?? COPY.lend
@@ -43,12 +62,17 @@ export default function RentalRequestModal({ item, requesterId, onClose, onSent 
         <h2 className="font-semibold">
           "{item.title}" {copy.heading}
         </h2>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={copy.placeholder}
-          className="w-full border rounded-md px-3 py-2 text-sm h-24 resize-none"
-        />
+        <div>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={copy.placeholder}
+            className="w-full border rounded-md px-3 py-2 text-sm h-24 resize-none"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            물품 정보로 미리 채워봤어요. 필요하면 고쳐서 보내세요.
+          </p>
+        </div>
         {error && <p className="text-xs text-red-600">{error}</p>}
         <div className="flex gap-2 justify-end">
           <button
