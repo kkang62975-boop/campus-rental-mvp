@@ -1,12 +1,13 @@
 const STYLES = {
   available: 'bg-emerald-100 text-emerald-700',
   rented: 'bg-amber-100 text-amber-700',
+  unavailable: 'bg-orange-100 text-orange-700',
   returned: 'bg-slate-200 text-slate-600',
 }
 
 const LABELS = {
-  lend: { available: '대여가능', rented: '대여중', returned: '반납완료' },
-  borrow: { available: '구하는 중', rented: '매칭됨', returned: '완료' },
+  lend: { available: '대여가능', rented: '대여중', unavailable: '대여중지', returned: '반납완료' },
+  borrow: { available: '구하는 중', rented: '매칭됨', unavailable: '중지됨', returned: '완료' },
 }
 
 export default function StatusBadge({ status, postType = 'lend' }) {

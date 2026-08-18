@@ -95,6 +95,17 @@ export async function createItem(payload) {
   return data
 }
 
+export async function updateItem(itemId, payload) {
+  const { data, error } = await supabase
+    .from('items')
+    .update(payload)
+    .eq('id', itemId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function updateItemStatus(itemId, status) {
   const { data, error } = await supabase
     .from('items')
@@ -104,4 +115,9 @@ export async function updateItemStatus(itemId, status) {
     .single()
   if (error) throw error
   return data
+}
+
+export async function deleteItem(itemId) {
+  const { error } = await supabase.from('items').delete().eq('id', itemId)
+  if (error) throw error
 }

@@ -38,6 +38,43 @@ create table profiles (
   created_at timestamptz not null default now()
 );
 
+-- 4b. 게시판 스타일 수정/삭제 비밀번호 (4자리 숫자)
+-- anon 키로 이 테이블에 직접 접근하는 정책은 하나도 만들지 않는다 - select/insert/update가
+-- 전부 막혀 있어서, 아래 set_pin/verify_pin 함수(security definer)를 통해서만 다룰 수 있다.
+-- 이렇게 해야 REST API로 평문 비밀번호(나 해시)가 그대로 노출되지 않는다.
+create table profile_pins (
+  profile_id uuid primary key references profiles(id) on delete cascade,
+  pin_hash text not null
+);
+alter table profile_pins enable row level security;
+
+create or replace function set_pin(p_profile_id uuid, p_pin text)
+returns void
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  insert into profile_pins (profile_id, pin_hash)
+  values (p_profile_id, crypt(p_pin, gen_salt('bf')))
+  on conflict (profile_id) do update set pin_hash = excluded.pin_hash;
+$$;
+
+create or replace function verify_pin(p_profile_id uuid, p_pin text)
+returns boolean
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  select exists (
+    select 1 from profile_pins
+    where profile_id = p_profile_id
+      and pin_hash = crypt(p_pin, pin_hash)
+  );
+$$;
+
+grant execute on function set_pin(uuid, text) to anon, authenticated;
+grant execute on function verify_pin(uuid, text) to anon, authenticated;
+
 -- 5. 물품
 -- post_type: 'lend' = 내가 가진 물건을 빌려줌 (중고장터 "팝니다"格), 'borrow' = 물건을 구함 ("삽니다"格)
 -- 두 경우 모두 owner_id는 글쓴이, rental_requests.requester_id는 그 글에 반응한 상대방을 의미한다
@@ -55,8 +92,10 @@ create table items (
   photo_url text,
   location_text text,
   available_time text,
+  -- unavailable: 등록자가 직접 대여를 잠시 중지한 상태 (rented처럼 상대방이 있는 게 아니라
+  -- 등록자 스스로 껐다 켰다 할 수 있음)
   status text not null default 'available'
-    check (status in ('available', 'rented', 'returned')),
+    check (status in ('available', 'rented', 'unavailable', 'returned')),
   created_at timestamptz not null default now()
 );
 

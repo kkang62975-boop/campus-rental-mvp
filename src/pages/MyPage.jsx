@@ -43,7 +43,7 @@ export default function MyPage() {
     return (
       <Layout>
         <h1 className="text-xl font-bold mb-4">마이페이지</h1>
-        <NicknameGate onSubmit={(nickname) => registerNickname(nickname, campus?.id)} />
+        <NicknameGate onSubmit={(nickname, pin) => registerNickname(nickname, pin, campus?.id)} />
       </Layout>
     )
   }

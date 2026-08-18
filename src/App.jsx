@@ -14,6 +14,7 @@ export default function App() {
       <Route path="/:campusSlug/map" element={<MapPage />} />
       <Route path="/:campusSlug/items" element={<ItemListPage />} />
       <Route path="/:campusSlug/items/new" element={<ItemFormPage />} />
+      <Route path="/:campusSlug/items/:itemId/edit" element={<ItemFormPage />} />
       <Route path="/:campusSlug/items/:itemId" element={<ItemDetailPage />} />
       <Route path="/:campusSlug/my" element={<MyPage />} />
       <Route path="/chat/:requestId" element={<ChatPage />} />

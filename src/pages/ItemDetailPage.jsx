@@ -5,7 +5,8 @@ import StatusBadge from '../components/StatusBadge'
 import PostTypeBadge from '../components/PostTypeBadge'
 import NicknameGate from '../components/NicknameGate'
 import RentalRequestModal from '../components/RentalRequestModal'
-import { useItem } from '../hooks/useItems'
+import PinModal from '../components/PinModal'
+import { deleteItem, updateItemStatus, useItem } from '../hooks/useItems'
 import { useCampus } from '../hooks/useCampuses'
 import { useProfile } from '../hooks/useProfile'
 import {
@@ -18,19 +19,29 @@ import {
 const COPY = {
   lend: {
     requestButton: '대여 요청 보내기',
-    unavailableRented: '지금은 다른 사람이 대여 중이에요.',
-    unavailableReturned: '반납 완료되어 더 이상 대여할 수 없어요.',
+    unavailable: {
+      rented: '지금은 다른 사람이 대여 중이에요.',
+      unavailable: '등록자가 잠시 대여를 중지했어요.',
+      returned: '반납 완료되어 더 이상 대여할 수 없어요.',
+    },
     pendingWait: '요청을 보냈어요. 상대방의 수락을 기다리는 중...',
     pendingListTitle: '대여 요청',
     completeButton: '반납 완료 처리',
+    pauseButton: '대여 중지',
+    resumeButton: '다시 대여 가능으로',
   },
   borrow: {
     requestButton: '제가 빌려드릴게요',
-    unavailableRented: '이미 다른 분이 빌려주기로 했어요.',
-    unavailableReturned: '요청이 마감됐어요.',
+    unavailable: {
+      rented: '이미 다른 분이 빌려주기로 했어요.',
+      unavailable: '등록자가 이 글을 잠시 중지했어요.',
+      returned: '요청이 마감됐어요.',
+    },
     pendingWait: '빌려드리겠다고 알렸어요. 상대방의 확인을 기다리는 중...',
     pendingListTitle: '빌려주겠다는 사람',
     completeButton: '완료 처리',
+    pauseButton: '모집 중지',
+    resumeButton: '다시 모집하기',
   },
 }
 
@@ -43,6 +54,9 @@ export default function ItemDetailPage() {
   const { requests, reload: reloadRequests } = useRequestsForItem(itemId)
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [busyRequestId, setBusyRequestId] = useState(null)
+  const [statusBusy, setStatusBusy] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
 
   if (loading) {
     return (
@@ -103,6 +117,28 @@ export default function ItemDetailPage() {
     }
   }
 
+  const handleTogglePause = async () => {
+    setStatusBusy(true)
+    try {
+      await updateItemStatus(item.id, item.status === 'available' ? 'unavailable' : 'available')
+      reload()
+    } finally {
+      setStatusBusy(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('정말 삭제할까요? 이 물품에 대한 요청/채팅 기록도 함께 삭제돼요.')) return
+    setDeleting(true)
+    try {
+      await deleteItem(item.id)
+      navigate(`/${campusSlug}/items`)
+    } catch (err) {
+      alert(err.message)
+      setDeleting(false)
+    }
+  }
+
   return (
     <Layout>
       <div className="bg-white border rounded-xl overflow-hidden">
@@ -142,7 +178,7 @@ export default function ItemDetailPage() {
         {!profile && !isOwner && (
           <NicknameGate
             title="대여 요청을 보내려면 닉네임이 필요해요"
-            onSubmit={(nickname) => registerNickname(nickname, campus?.id)}
+            onSubmit={(nickname, pin) => registerNickname(nickname, pin, campus?.id)}
           />
         )}
 
@@ -156,9 +192,7 @@ export default function ItemDetailPage() {
         )}
 
         {profile && !isOwner && item.status !== 'available' && !myRequest && (
-          <p className="text-sm text-slate-500 text-center">
-            {item.status === 'rented' ? copy.unavailableRented : copy.unavailableReturned}
-          </p>
+          <p className="text-sm text-slate-500 text-center">{copy.unavailable[item.status]}</p>
         )}
 
         {myRequest && myRequest.status === 'pending' && (
@@ -214,6 +248,34 @@ export default function ItemDetailPage() {
             {copy.completeButton}
           </button>
         )}
+
+        <div className="flex items-center justify-center gap-4 mt-6 text-sm text-slate-500">
+          <button
+            onClick={() => setPendingAction('edit')}
+            className="underline underline-offset-2 hover:text-slate-700"
+          >
+            수정
+          </button>
+          {(item.status === 'available' || item.status === 'unavailable') && (
+            <button
+              disabled={statusBusy}
+              onClick={() => setPendingAction('pause')}
+              className="underline underline-offset-2 hover:text-slate-700 disabled:opacity-50"
+            >
+              {item.status === 'available' ? copy.pauseButton : copy.resumeButton}
+            </button>
+          )}
+          <button
+            disabled={deleting}
+            onClick={() => setPendingAction('delete')}
+            className="underline underline-offset-2 hover:text-red-600 disabled:opacity-50"
+          >
+            삭제
+          </button>
+        </div>
+        <p className="text-[11px] text-slate-400 text-center mt-1">
+          본인 글이라면 등록할 때 정한 4자리 비밀번호로 관리할 수 있어요.
+        </p>
       </div>
 
       {showRequestModal && (
@@ -224,6 +286,20 @@ export default function ItemDetailPage() {
           onSent={() => {
             setShowRequestModal(false)
             refreshAll()
+          }}
+        />
+      )}
+
+      {pendingAction && (
+        <PinModal
+          profileId={item.owner_id}
+          onClose={() => setPendingAction(null)}
+          onVerified={() => {
+            const action = pendingAction
+            setPendingAction(null)
+            if (action === 'edit') navigate(`/${campusSlug}/items/${item.id}/edit`)
+            if (action === 'pause') handleTogglePause()
+            if (action === 'delete') handleDelete()
           }}
         />
       )}
