@@ -42,6 +42,9 @@ export default function PinModal({ title = '비밀번호 확인', profileId, onC
           className="w-full border rounded-md px-3 py-2 text-sm text-center tracking-[0.5em]"
         />
         {error && <p className="text-xs text-red-600 text-center">{error}</p>}
+        <p className="text-[11px] text-slate-400 text-center">
+          비밀번호가 없거나 잊으셨다면 마이페이지에서 새로 정할 수 있어요.
+        </p>
         <div className="flex gap-2">
           <button
             type="button"
