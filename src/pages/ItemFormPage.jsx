@@ -23,6 +23,7 @@ export default function ItemFormPage() {
   const { campusSlug } = useParams()
   const [searchParams] = useSearchParams()
   const presetBuildingId = searchParams.get('buildingId') ?? ''
+  const presetPostType = searchParams.get('postType') === 'borrow' ? 'borrow' : 'lend'
   const navigate = useNavigate()
 
   const { campus } = useCampus(campusSlug)
@@ -31,7 +32,7 @@ export default function ItemFormPage() {
   const { profile, registerNickname } = useProfile()
 
   const [form, setForm] = useState({
-    postType: 'lend',
+    postType: presetPostType,
     title: '',
     description: '',
     categoryId: '',

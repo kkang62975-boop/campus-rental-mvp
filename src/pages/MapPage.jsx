@@ -53,16 +53,30 @@ export default function MapPage() {
 
       {selectedBuilding && (
         <div className="mt-4 border rounded-xl bg-white p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h2 className="font-semibold">{selectedBuilding.name}</h2>
-            <button
-              onClick={() =>
-                navigate(`/${campusSlug}/items/new?buildingId=${selectedBuilding.id}`)
-              }
-              className="text-sm px-3 py-1.5 rounded-md bg-brand-600 text-white font-medium"
-            >
-              + 이 건물에 물품 등록
-            </button>
+            <div className="flex gap-1.5 shrink-0">
+              <button
+                onClick={() =>
+                  navigate(
+                    `/${campusSlug}/items/new?buildingId=${selectedBuilding.id}&postType=lend`,
+                  )
+                }
+                className="text-sm px-3 py-1.5 rounded-md bg-brand-600 text-white font-medium"
+              >
+                빌려줄게요
+              </button>
+              <button
+                onClick={() =>
+                  navigate(
+                    `/${campusSlug}/items/new?buildingId=${selectedBuilding.id}&postType=borrow`,
+                  )
+                }
+                className="text-sm px-3 py-1.5 rounded-md border border-brand-600 text-brand-600 font-medium"
+              >
+                빌릴게요
+              </button>
+            </div>
           </div>
 
           {buildingItems.length === 0 ? (
