@@ -8,7 +8,14 @@ const ITEM_SELECT = `
   owner:profiles(id, nickname)
 `
 
-export function useItems({ campusId, buildingId, categoryId, sort = 'newest' } = {}) {
+export function useItems({
+  campusId,
+  buildingId,
+  categoryId,
+  status,
+  search,
+  sort = 'newest',
+} = {}) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -27,6 +34,8 @@ export function useItems({ campusId, buildingId, categoryId, sort = 'newest' } =
     let query = supabase.from('items').select(ITEM_SELECT).eq('campus_id', campusId)
     if (buildingId) query = query.eq('building_id', buildingId)
     if (categoryId) query = query.eq('category_id', categoryId)
+    if (status) query = query.eq('status', status)
+    if (search?.trim()) query = query.ilike('title', `%${search.trim()}%`)
     query = query.order('created_at', { ascending: sort === 'oldest' })
 
     query.then(({ data, error }) => {
@@ -39,7 +48,7 @@ export function useItems({ campusId, buildingId, categoryId, sort = 'newest' } =
     return () => {
       cancelled = true
     }
-  }, [campusId, buildingId, categoryId, sort, reloadToken])
+  }, [campusId, buildingId, categoryId, status, search, sort, reloadToken])
 
   return { items, loading, error, reload }
 }

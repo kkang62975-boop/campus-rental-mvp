@@ -129,6 +129,20 @@ create policy "public all chat_messages" on chat_messages for all using (true) w
 create policy "public all reviews" on reviews for all using (true) with check (true);
 
 -- ---------------------------------------------------------------------
+-- Storage: item-photos 버킷 업로드 허용 정책
+-- 버킷을 "Public"으로 만들어도 그건 읽기(다운로드)만 열어줄 뿐, 업로드(insert)는
+-- storage.objects에 별도 RLS 정책이 있어야 허용된다. MVP는 로그인이 없으므로
+-- anon 키에 대해 이 버킷 한정으로 전체 허용한다.
+-- ---------------------------------------------------------------------
+create policy "public read item-photos" on storage.objects
+  for select to public
+  using (bucket_id = 'item-photos');
+
+create policy "public upload item-photos" on storage.objects
+  for insert to public
+  with check (bucket_id = 'item-photos');
+
+-- ---------------------------------------------------------------------
 -- 시드 데이터: 성균관대 자연과학캠퍼스(수원) / 인문사회과학캠퍼스(서울 명륜동)
 --
 -- 두 캠퍼스 모두 사용자가 제공한 공식 캠퍼스 조감도 이미지를 기준으로

@@ -128,6 +128,12 @@ export default function ItemDetailPage() {
           </button>
         )}
 
+        {profile && !isOwner && item.status !== 'available' && !myRequest && (
+          <p className="text-sm text-slate-500 text-center">
+            {item.status === 'rented' ? '지금은 다른 사람이 대여 중이에요.' : '반납 완료되어 더 이상 대여할 수 없어요.'}
+          </p>
+        )}
+
         {myRequest && myRequest.status === 'pending' && (
           <p className="text-sm text-slate-500 text-center">요청을 보냈어요. 상대방의 수락을 기다리는 중...</p>
         )}

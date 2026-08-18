@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import NicknameGate from '../components/NicknameGate'
+import RegistrationSuccessModal from '../components/RegistrationSuccessModal'
 import { useCampus } from '../hooks/useCampuses'
 import { useBuildings } from '../hooks/useBuildings'
 import { useCategories } from '../hooks/useCategories'
 import { useProfile } from '../hooks/useProfile'
-import { createItem } from '../hooks/useItems'
+import { createItem, useItems } from '../hooks/useItems'
 import { supabase } from '../lib/supabaseClient'
 
 async function uploadPhoto(file, ownerId) {
@@ -40,6 +41,12 @@ export default function ItemFormPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [createdItem, setCreatedItem] = useState(null)
+
+  const { items: buildingItems, loading: loadingBuildingItems } = useItems({
+    campusId: campus?.id,
+    buildingId: createdItem?.building_id,
+  })
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -64,7 +71,8 @@ export default function ItemFormPage() {
         location_text: form.locationText || null,
         available_time: form.availableTime || null,
       })
-      navigate(`/${campusSlug}/items/${item.id}`)
+      const building = buildings.find((b) => b.id === item.building_id)
+      setCreatedItem({ ...item, building })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -180,6 +188,16 @@ export default function ItemFormPage() {
           등록하기
         </button>
       </form>
+
+      {createdItem && (
+        <RegistrationSuccessModal
+          item={createdItem}
+          buildingItems={buildingItems}
+          loadingBuildingItems={loadingBuildingItems}
+          onViewDetail={() => navigate(`/${campusSlug}/items/${createdItem.id}`)}
+          onViewMap={() => navigate(`/${campusSlug}/map?building=${createdItem.building_id}`)}
+        />
+      )}
     </Layout>
   )
 }

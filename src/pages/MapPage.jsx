@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import CampusMap from '../components/CampusMap'
 import ItemCard from '../components/ItemCard'
@@ -10,10 +10,11 @@ import { useItems } from '../hooks/useItems'
 export default function MapPage() {
   const { campusSlug } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { campus, loading: campusLoading } = useCampus(campusSlug)
   const { buildings } = useBuildings(campus?.id)
   const { items } = useItems({ campusId: campus?.id })
-  const [selectedBuildingId, setSelectedBuildingId] = useState(null)
+  const [selectedBuildingId, setSelectedBuildingId] = useState(searchParams.get('building'))
 
   const itemCountByBuilding = useMemo(() => {
     const counts = {}
