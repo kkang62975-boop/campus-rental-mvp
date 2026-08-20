@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import CategoryFilter from '../components/CategoryFilter'
 import ItemCard from '../components/ItemCard'
@@ -90,9 +90,19 @@ export default function ItemListPage() {
       {loading ? (
         <p className="text-slate-400">불러오는 중...</p>
       ) : items.length === 0 ? (
-        <p className="text-slate-400">
-          {search ? `"${search}"에 대한 검색 결과가 없어요.` : '아직 등록된 물품이 없어요.'}
-        </p>
+        <div className="text-center py-6">
+          <p className="text-slate-400">
+            {search ? `"${search}"에 대한 검색 결과가 없어요.` : '아직 등록된 물품이 없어요.'}
+          </p>
+          {search && (
+            <Link
+              to={`/${campusSlug}/items/new?postType=borrow&title=${encodeURIComponent(search)}`}
+              className="inline-block mt-3 px-4 py-2 rounded-md bg-brand-600 text-white text-sm font-medium"
+            >
+              "{search}" 구해요 글 바로 등록하기
+            </Link>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {items.map((item) => (

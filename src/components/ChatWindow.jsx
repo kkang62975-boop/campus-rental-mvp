@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { sendMessage, useChatMessages } from '../hooks/useChatMessages'
 
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function ChatWindow({ chatRoomId, profile }) {
   const { messages, loading } = useChatMessages(chatRoomId)
   const [text, setText] = useState('')
@@ -25,7 +29,11 @@ export default function ChatWindow({ chatRoomId, profile }) {
         {messages.map((m) => {
           const mine = m.sender_id === profile.id
           return (
-            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+            <div
+              key={m.id}
+              className={`flex items-end gap-1.5 ${mine ? 'justify-end' : 'justify-start'}`}
+            >
+              {mine && <span className="text-[10px] text-slate-400 shrink-0">{formatTime(m.created_at)}</span>}
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
                   mine ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-800'
@@ -38,6 +46,7 @@ export default function ChatWindow({ chatRoomId, profile }) {
                 )}
                 {m.content}
               </div>
+              {!mine && <span className="text-[10px] text-slate-400 shrink-0">{formatTime(m.created_at)}</span>}
             </div>
           )
         })}

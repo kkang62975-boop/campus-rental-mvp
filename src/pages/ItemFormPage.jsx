@@ -30,12 +30,18 @@ const EMPTY_FORM = {
   photoFile: null,
 }
 
+const TIME_PRESETS = {
+  lend: ['지금 바로 가능', '오늘 저녁', '내일 오전', '주말에'],
+  borrow: ['지금 급해요', '오늘 안에', '내일까지', '이번 주말까지'],
+}
+
 export default function ItemFormPage() {
   const { campusSlug, itemId } = useParams()
   const isEdit = Boolean(itemId)
   const [searchParams] = useSearchParams()
   const presetBuildingId = searchParams.get('buildingId') ?? ''
   const presetPostType = searchParams.get('postType') === 'borrow' ? 'borrow' : 'lend'
+  const presetTitle = searchParams.get('title') ?? ''
   const navigate = useNavigate()
 
   const { campus } = useCampus(campusSlug)
@@ -48,6 +54,7 @@ export default function ItemFormPage() {
     ...EMPTY_FORM,
     postType: presetPostType,
     buildingId: presetBuildingId,
+    title: presetTitle,
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
@@ -246,11 +253,27 @@ export default function ItemFormPage() {
 
         <div>
           <label className="text-sm font-medium">{isBorrow ? '필요한 시간대' : '대여 가능 시간'}</label>
+          <div className="mt-1.5 mb-1.5 flex flex-wrap gap-1.5">
+            {TIME_PRESETS[form.postType].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => update('availableTime', preset)}
+                className={`px-2.5 py-1 rounded-full text-xs border ${
+                  form.availableTime === preset
+                    ? 'bg-brand-600 text-white border-brand-600'
+                    : 'border-slate-200 text-slate-600 hover:border-brand-400 hover:text-brand-600'
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
           <input
             value={form.availableTime}
             onChange={(e) => update('availableTime', e.target.value)}
             placeholder={isBorrow ? '예: 오늘 저녁까지 급해요' : '예: 평일 저녁 6시~10시'}
-            className="mt-1 w-full border rounded-md px-3 py-2 text-sm"
+            className="w-full border rounded-md px-3 py-2 text-sm"
           />
         </div>
 

@@ -15,6 +15,13 @@ const REQUEST_STATUS_LABEL = {
   completed: '반납 완료',
 }
 
+function lenderTier(count) {
+  if (count >= 10) return { emoji: '🏆', label: '나눔 마스터' }
+  if (count >= 5) return { emoji: '🌟', label: '나눔 고수' }
+  if (count >= 1) return { emoji: '🌱', label: '나눔 새싹' }
+  return null
+}
+
 export default function MyPage() {
   const { campusSlug } = useParams()
   const navigate = useNavigate()
@@ -22,6 +29,7 @@ export default function MyPage() {
   const { profile, registerNickname } = useProfile()
   const [myItems, setMyItems] = useState([])
   const [myRequests, setMyRequests] = useState([])
+  const [completedLendCount, setCompletedLendCount] = useState(0)
   const [pinInput, setPinInput] = useState('')
   const [pinSaving, setPinSaving] = useState(false)
   const [pinError, setPinError] = useState(null)
@@ -42,6 +50,14 @@ export default function MyPage() {
       .eq('requester_id', profile.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => data && setMyRequests(data))
+
+    // 내가 등록자(item.owner_id)로서 완료까지 간 대여 건수 = 실제로 빌려준 횟수
+    supabase
+      .from('rental_requests')
+      .select('id, item:items!inner(owner_id)', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .eq('item.owner_id', profile.id)
+      .then(({ count }) => setCompletedLendCount(count ?? 0))
   }, [profile])
 
   const handleSetPin = async (e) => {
@@ -69,10 +85,23 @@ export default function MyPage() {
     )
   }
 
+  const tier = lenderTier(completedLendCount)
+
   return (
     <Layout>
-      <h1 className="text-xl font-bold mb-1">{profile.nickname}님</h1>
-      <p className="text-sm text-slate-500 mb-6">로그인 없이 이 브라우저에만 저장된 닉네임이에요.</p>
+      <div className="flex items-center gap-2 mb-1">
+        <h1 className="text-xl font-bold">{profile.nickname}님</h1>
+        {tier && (
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            {tier.emoji} {tier.label}
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-slate-500 mb-1">로그인 없이 이 브라우저에만 저장된 닉네임이에요.</p>
+      <p className="text-sm text-slate-600 mb-6">
+        등록한 물품 <span className="font-semibold">{myItems.length}</span>개 · 빌려준 횟수{' '}
+        <span className="font-semibold">{completedLendCount}</span>번
+      </p>
 
       <section className="mb-8 border rounded-lg p-4 bg-white">
         <h2 className="font-semibold mb-1">비밀번호 설정/변경</h2>
