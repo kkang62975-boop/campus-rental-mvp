@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useCampuses } from '../hooks/useCampuses'
 import Layout from '../components/Layout'
+import { trackEvent } from '../lib/analytics'
 
 const FALLBACK_CAMPUSES = [
   { slug: 'natural', name: '자연과학캠퍼스' },
@@ -25,6 +26,7 @@ export default function CampusSelectPage() {
             <Link
               key={campus.slug}
               to={`/${campus.slug}/map`}
+              onClick={() => trackEvent('select_campus', { campus: campus.slug })}
               className="border rounded-xl p-6 bg-white text-center hover:border-brand-400 hover:shadow-sm transition"
             >
               <p className="text-lg font-semibold">{campus.name}</p>

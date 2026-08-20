@@ -15,6 +15,7 @@ import {
   rejectRequest,
   useRequestsForItem,
 } from '../hooks/useRentalRequests'
+import { trackEvent } from '../lib/analytics'
 
 const COPY = {
   lend: {
@@ -88,6 +89,7 @@ export default function ItemDetailPage() {
     setBusyRequestId(request.id)
     try {
       const chatRoom = await acceptRequest(request)
+      trackEvent('accept_request', { post_type: item.post_type })
       refreshAll()
       navigate(`/chat/${request.id}`, { state: { chatRoomId: chatRoom.id } })
     } finally {
@@ -99,6 +101,7 @@ export default function ItemDetailPage() {
     setBusyRequestId(request.id)
     try {
       await rejectRequest(request.id)
+      trackEvent('reject_request', { post_type: item.post_type })
       refreshAll()
     } finally {
       setBusyRequestId(null)
@@ -111,6 +114,7 @@ export default function ItemDetailPage() {
     setBusyRequestId(activeRequest.id)
     try {
       await completeRequest(activeRequest)
+      trackEvent('complete_rental', { post_type: item.post_type })
       refreshAll()
     } finally {
       setBusyRequestId(null)
@@ -119,8 +123,10 @@ export default function ItemDetailPage() {
 
   const handleTogglePause = async () => {
     setStatusBusy(true)
+    const next = item.status === 'available' ? 'unavailable' : 'available'
     try {
-      await updateItemStatus(item.id, item.status === 'available' ? 'unavailable' : 'available')
+      await updateItemStatus(item.id, next)
+      trackEvent('toggle_item_availability', { next_status: next })
       reload()
     } finally {
       setStatusBusy(false)
@@ -132,6 +138,7 @@ export default function ItemDetailPage() {
     setDeleting(true)
     try {
       await deleteItem(item.id)
+      trackEvent('delete_item', { post_type: item.post_type })
       navigate(`/${campusSlug}/items`)
     } catch (err) {
       alert(err.message)
@@ -184,7 +191,10 @@ export default function ItemDetailPage() {
 
         {profile && !isOwner && item.status === 'available' && !myRequest && (
           <button
-            onClick={() => setShowRequestModal(true)}
+            onClick={() => {
+              trackEvent('open_request_modal', { post_type: item.post_type })
+              setShowRequestModal(true)
+            }}
             className="w-full py-2.5 rounded-md bg-brand-600 text-white font-medium"
           >
             {copy.requestButton}

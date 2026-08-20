@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { sendMessage, useChatMessages } from '../hooks/useChatMessages'
+import { trackEvent } from '../lib/analytics'
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
@@ -20,6 +21,7 @@ export default function ChatWindow({ chatRoomId, profile }) {
     const content = text.trim()
     setText('')
     await sendMessage({ chatRoomId, senderId: profile.id, content })
+    trackEvent('send_chat_message')
   }
 
   return (

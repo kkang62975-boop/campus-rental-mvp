@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import CampusSelectPage from './pages/CampusSelectPage'
 import MapPage from './pages/MapPage'
 import ItemListPage from './pages/ItemListPage'
@@ -6,8 +7,15 @@ import ItemDetailPage from './pages/ItemDetailPage'
 import ItemFormPage from './pages/ItemFormPage'
 import ChatPage from './pages/ChatPage'
 import MyPage from './pages/MyPage'
+import { trackPageView } from './lib/analytics'
 
 export default function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search)
+  }, [location.pathname, location.search])
+
   return (
     <Routes>
       <Route path="/" element={<CampusSelectPage />} />

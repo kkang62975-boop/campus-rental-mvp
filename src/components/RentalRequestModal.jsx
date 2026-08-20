@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createRentalRequest } from '../hooks/useRentalRequests'
+import { trackEvent } from '../lib/analytics'
 
 const COPY = {
   lend: {
@@ -45,6 +46,7 @@ export default function RentalRequestModal({ item, requesterId, onClose, onSent 
     setError(null)
     try {
       await createRentalRequest({ itemId: item.id, requesterId, message })
+      trackEvent('send_rental_request', { post_type: item.post_type })
       onSent?.()
     } catch (err) {
       setError(err.message)

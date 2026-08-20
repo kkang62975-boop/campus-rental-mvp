@@ -9,6 +9,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useProfile } from '../hooks/useProfile'
 import { createItem, updateItem, useItem, useItems } from '../hooks/useItems'
 import { supabase } from '../lib/supabaseClient'
+import { trackEvent } from '../lib/analytics'
 
 async function uploadPhoto(file, ownerId) {
   const ext = file.name.split('.').pop()
@@ -102,6 +103,7 @@ export default function ItemFormPage() {
           location_text: form.locationText || null,
           available_time: form.availableTime || null,
         })
+        trackEvent('edit_item', { post_type: form.postType })
         navigate(`/${campusSlug}/items/${itemId}`)
         return
       }
@@ -125,6 +127,7 @@ export default function ItemFormPage() {
       })
       const building = buildings.find((b) => b.id === item.building_id)
       setCreatedItem({ ...item, building })
+      trackEvent('register_item', { post_type: form.postType, has_building: Boolean(item.building_id) })
     } catch (err) {
       setError(err.message)
     } finally {

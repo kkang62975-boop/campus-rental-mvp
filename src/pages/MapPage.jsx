@@ -6,6 +6,7 @@ import ItemCard from '../components/ItemCard'
 import { useCampus } from '../hooks/useCampuses'
 import { useBuildings } from '../hooks/useBuildings'
 import { useItems } from '../hooks/useItems'
+import { trackEvent } from '../lib/analytics'
 
 export default function MapPage() {
   const { campusSlug } = useParams()
@@ -47,7 +48,10 @@ export default function MapPage() {
         campus={campus}
         buildings={buildings}
         selectedBuildingId={selectedBuildingId}
-        onSelectBuilding={(b) => setSelectedBuildingId(b.id)}
+        onSelectBuilding={(b) => {
+          setSelectedBuildingId(b.id)
+          trackEvent('select_building', { building: b.name })
+        }}
         itemCountByBuilding={itemCountByBuilding}
       />
 
@@ -57,21 +61,23 @@ export default function MapPage() {
             <h2 className="font-semibold">{selectedBuilding.name}</h2>
             <div className="flex gap-1.5 shrink-0">
               <button
-                onClick={() =>
+                onClick={() => {
+                  trackEvent('start_item_form', { post_type: 'lend', source: 'map' })
                   navigate(
                     `/${campusSlug}/items/new?buildingId=${selectedBuilding.id}&postType=lend`,
                   )
-                }
+                }}
                 className="text-sm px-3 py-1.5 rounded-md bg-brand-600 text-white font-medium"
               >
                 빌려줄게요
               </button>
               <button
-                onClick={() =>
+                onClick={() => {
+                  trackEvent('start_item_form', { post_type: 'borrow', source: 'map' })
                   navigate(
                     `/${campusSlug}/items/new?buildingId=${selectedBuilding.id}&postType=borrow`,
                   )
-                }
+                }}
                 className="text-sm px-3 py-1.5 rounded-md border border-brand-600 text-brand-600 font-medium"
               >
                 빌릴게요

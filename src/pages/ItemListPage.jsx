@@ -6,6 +6,7 @@ import ItemCard from '../components/ItemCard'
 import { useCampus } from '../hooks/useCampuses'
 import { useCategories } from '../hooks/useCategories'
 import { useItems } from '../hooks/useItems'
+import { trackEvent } from '../lib/analytics'
 
 const POST_TYPE_TABS = [
   { value: null, label: '전체' },
@@ -24,9 +25,13 @@ export default function ItemListPage() {
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
 
-  // 검색어는 300ms 디바운스 후 실제 쿼리에 반영
+  // 검색어는 300ms 디바운스 후 실제 쿼리에 반영. 검색어 원문은 GA로 보내지 않고
+  // "검색을 사용했다"는 이벤트만 남긴다.
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 300)
+    const timer = setTimeout(() => {
+      setSearch(searchInput)
+      if (searchInput.trim()) trackEvent('search_items')
+    }, 300)
     return () => clearTimeout(timer)
   }, [searchInput])
 
@@ -97,6 +102,7 @@ export default function ItemListPage() {
           {search && (
             <Link
               to={`/${campusSlug}/items/new?postType=borrow&title=${encodeURIComponent(search)}`}
+              onClick={() => trackEvent('start_item_form', { post_type: 'borrow', source: 'empty_search' })}
               className="inline-block mt-3 px-4 py-2 rounded-md bg-brand-600 text-white text-sm font-medium"
             >
               "{search}" 구해요 글 바로 등록하기
